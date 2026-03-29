@@ -1,0 +1,79 @@
+//https://nodejs.org/api/modules.html dao를 node.js 코드로 사용하겠다.
+//exports : node.js에서 현재 파일에 정의된 함수나 객체를 다른 파일에서 사용할 수 있도록 내보내는 키워드
+const conn = require("../config/db");
+
+// 1. 전체 출력
+exports.findAll = (callback) => {
+  const sql = "SELECT * FROM emp ORDER BY empno";
+  conn.query(sql, (err, results) => {
+    callback(err, results);
+  });
+};
+
+// 2. 단건 출력
+exports.findById = (empno, callback) => {
+  const sql = "SELECT * FROM emp WHERE empno = ?";
+  conn.query(sql, [empno], (err, results) => {
+    callback(err, results);
+  });
+};
+
+// 3. 생성
+exports.create = (emp, callback) => {
+  const sql = `
+    INSERT INTO emp
+    (empno, ename, job, mgr, hiredate, sal, comm, deptno)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  conn.query(
+    sql,
+    [
+      emp.empno,
+      emp.ename,
+      emp.job,
+      emp.mgr || null,
+      emp.hiredate || null,
+      emp.sal || null,
+      emp.comm || null,
+      emp.deptno || null
+    ],
+    (err, results) => {
+      callback(err, results);
+    }
+  );
+};
+
+// 4. 업데이트 수정
+exports.update = (empno, emp, callback) => {
+  const sql = `
+    UPDATE emp
+    SET ename = ?, job = ?, mgr = ?, hiredate = ?, sal = ?, comm = ?, deptno = ?
+    WHERE empno = ?
+  `;
+
+  conn.query(
+    sql,
+    [
+      emp.ename,
+      emp.job,
+      emp.mgr || null,
+      emp.hiredate || null,
+      emp.sal || null,
+      emp.comm || null,
+      emp.deptno || null,
+      empno // WHERE 절에 들어갈 조건값
+    ],
+    (err, results) => {
+      callback(err, results);
+    }
+  );
+};
+
+// 5. 삭제
+exports.remove = (empno, callback) => {
+  const sql = "DELETE FROM emp WHERE empno=?";
+  conn.query(sql, [empno], (err, results) => {
+    callback(err, results);
+  });
+};

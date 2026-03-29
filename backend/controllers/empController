@@ -1,0 +1,72 @@
+const empModel = require("../models/empModel");
+
+// 전체 조회
+exports.getEmpList = (req, res) => {
+  empModel.findAll((err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "전체 조회 실패" });
+    }
+    res.json(results);
+  });
+};
+
+// 단건 조회
+exports.getEmpById = (req, res) => {
+  const empno = req.params.empno;
+
+  empModel.findById(empno, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "상세 조회 실패" });
+    }
+    res.json(results);
+  });
+};
+
+// 등록
+exports.insertEmp = (req, res) => {
+  const empData = req.body;
+  empModel.create(empData, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "등록 실패" });
+    }
+
+    res.status(201).json({
+      massage: "사원 등록 성공 ",
+      result: results
+    });
+  });
+};
+
+//수정
+// 수정 (중복된 insertEmp 이름을 updateEmp로 변경하고 model.update 호출)
+exports.updateEmp = (req, res) => {
+  const empno = req.params.empno;
+  const empData = req.body;
+
+  empModel.update(empno, empData, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "수정 실패" });
+    }
+
+    res.json({
+      massage: "사원 수정 성공 ", // 기존 스타일 유지
+      result: results
+    });
+  });
+};
+
+// 삭제
+exports.deleteEmp = (req, res) => {
+  const empno = req.params.empno;
+
+  empModel.remove(empno, (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "삭제 실패" });
+    }
+
+    res.json({
+      massage: "사원 삭제 성공 ",
+      result: results
+    });
+  });
+};

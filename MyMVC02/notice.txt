@@ -1,0 +1,185 @@
+# mymvc02는 React + Express + MySQL 기반 JWT 인증 예제 프로젝이다.  
+
+## 구성
+- backend: Express + MySQL2 + JWT + CORS
+- frontend: React + Vite + Axios Interceptor
+
+## 실행 순서
+
+### 1) DB 생성
+`backend/sql/schema.sql` 파일을 MySQL에서 실행
+
+### 2) 백엔드 실행
+cd backend
+npm install
+npm run dev
+
+
+### 3) 프론트엔드 실행
+cd frontend
+npm install
+npm run dev
+
+
+## 기본 포트
+- Backend: http://localhost:9000
+- Frontend: http://localhost:5173
+
+## 테스트 계정
+- userid: admin
+- password: 1234
+
+## 디렉토리 구조  
+mymvc02/
+├── backend/                 # Express 기반 백엔드 서버
+└── frontend/                # React 기반 프론트엔드
+
+## backend 구조 (MVC + JWT 인증)
+backend/
+├── app.js                  # 서버 시작 파일 (Express 앱 생성, CORS, 라우터 등록)
+├── package.json            # 백엔드 의존성 및 실행 스크립트 정의
+├── .env                    # DB 정보, JWT 비밀키 등 환경 변수 설정
+├── config/
+│   └── db.js               # MySQL 연결 설정 및 커넥션 객체 생성
+├── models/
+│   ├── userModel.js        # 사용자 조회 (로그인용 DB 접근)
+│   └── addressModel.js     # 주소록 CRUD SQL 처리
+├── controllers/
+│   ├── authController.js   # 로그인 처리 + JWT 토큰 생성
+│   └── addressController.js# 주소록 CRUD 비즈니스 로직 처리
+├── routes/
+│   ├── authRoutes.js       # /auth 관련 URL → authController 연결
+│   └── addressRoutes.js    # /address 관련 URL → addressController 연결
+├── middleware/
+│   └── authMiddleware.js   # JWT 토큰 검증 (로그인 여부 체크)
+├── utils/
+│   └── jwtUtil.js          # JWT 생성(sign) 및 검증(verify) 공통 함수
+└── sql/
+    └── schema.sql          # 테이블 생성 및 초기 데이터 삽입 SQL
+### frontend 구조 (UI + API + 상태 처리)
+frontend/
+├── index.html              # React 앱이 렌더링되는 HTML 진입점
+├── package.json            # 프론트엔드 라이브러리 정의
+├── vite.config.js          # Vite 개발 서버 설정
+└── src/
+    ├── main.jsx            # React 앱 시작 (App 컴포넌트 렌더링)
+    ├── App.jsx             # 전체 화면 구성 및 로그인 상태 관리
+    ├── styles.css          # 전체 UI 스타일 정의
+    ├── components/
+    │   ├── LoginForm.jsx       # 로그인 입력 폼 + 요청 처리
+    │   ├── AddressList.jsx     # 주소록 목록 출력 (조회)
+    │   ├── AddressForm.jsx     # 주소록 등록/수정 폼
+    │   └── LoadingErrorBox.jsx # loading / error 상태 UI 표시
+    └── services/
+        ├── api.js              # axios 공통 설정 + interceptor (토큰 자동 추가)
+        ├── authApi.js          # 로그인 / 사용자 인증 관련 API 호출
+        └── addressApi.js       # 주소록 CRUD API 호출
+### 연결구조  
+React Component          # 화면
+   ↓
+services (axios)         # API 호출
+   ↓
+routes                   # URL 매핑
+   ↓
+controller               # 로직 처리
+   ↓
+model                    # DB 접근
+   ↓
+MySQL
+
+### 인증 흐름 (JWT 포함)
+LoginForm.jsx 
+  -> authController.js # 사용자 확인 + JWT 생성  *    
+ -> jwtUtil.js  토큰 생성   *   
+ -> localStorage 저장이후 요청: 
+ -> api.js (interceptor)  토큰 자동 추가    * 
+ -> authMiddleware.js    토큰 검증       * 
+ -> addressController.js  실제 데이터 처리
+
+ ## 클래스 개념 연결
+app.js : 메인 클래스 (서버 실행 및 전체 설정)
+db.js : 설정 클래스 (데이터베이스 연결 관리) 
+model : DAO 클래스 (데이터베이스 접근 및 SQL 처리)
+controller : 서비스/로직 클래스 (요청 처리 및 비즈니스 로직 수행)
+route : 매핑 클래스 (URL과 Controller 연결)
+middleware : 필터 클래스 (요청 전 인증 및 공통 처리)
+util : 공통 기능 클래스 (JWT 등 재사용 함수)
+component : UI 클래스 (화면 구성 요소)
+service(api) : 통신 클래스 (axios를 통한 API 호출)
+ 
+
+============================================
+## https://github.com/auth0/node-jsonwebtoken
+## https://www.jwt.io/
+
+JWT   => Json Web Token  =>  RFC 7519  
+    - .으로 구분되고  Base64Url 인코딩  
+    - Header :  토근의 유형이 적힌 서명 알고리즘  (RSA, SHA256 등  ) 
+    - Payload : 토큰에 담을 정보를 말한다.  사용자ID, 이름,권한, 만료시간등  
+    - Signatue:  Header + Payload    => Secret KEY 생성  => 암호화  
+
+JWT 사용처  
+     - DB나  서버가 별도의 세션 저장소를 만들고 싶지 않을 때  
+     - 클라이언트 상태정보를 저장하지 않는 곳   _ 서버 확장  
+     - 보안  
+
+JWT 인증 동작방식 
+   로그인  -> 토큰발급 (서버가 비밀키를 JWT생성 클라이언트에게 보낸다 ) -> 클라이언트가 토큰저장   -> Request[데이터저장 + 토큰] 헤더로 전송 
+     -> 검증 및 인증  (서버가 비밀키 인증하고 유효하면  Response) 
+
+[BE]
+jwt.sign(payload, secretOrPrivateKey, [options, callback])
+jwt.sign({
+  data: 'foobar'
+}, 'secret', { expiresIn: '1h' });
+
+
+jwt.verify(token, secretOrPublicKey, [options, callback])
+ jwt.verify(token, 'shhhhh', function(err, decoded) {
+  if (err) {
+    /*
+      err = {
+        name: 'JsonWebTokenError',
+        message: 'jwt malformed'
+      }
+    */
+  }
+});
+
+ 
+대상객체.compare(password, hash) ; 
+
+===========================================================
+* 인증 기반 오류
+server -> webServer -> WAS : WebApplicationServer
+
+1) 세션 기반 인증 application -> context -> session -> request ->page
+: {서버가 로그인 상태}를 저장 ,브라우저는 쿠키만 들고 다님 , 전통적이고 안정적
+
+2) JWT 기반 인증
+: 서버가 {토큰}을 발급,클라이언트가 토큰을 보내서 인증,  SPA(React) + API 구조에서 많이 사용
+JWT는 클레임을 담는 compact, URL-safe 토큰 형식.
+
+3) OAuth 2.0 / 소셜 로그인
+: 구글, 카카오, 네이버 로그인, 실제 서비스에서 많이 사용
+내부적으로는 access token, id token 등을 함께 씀
+
+4)Access Token + Refresh Token 방식 
+: 로그인 직후 짧은 수명의 access token 발급, 
+  만료되면 refresh token으로 재발급, 실무에서 가장 많이 사용
+
+=======================================================
+https://www.npmjs.com/package/bcryptjs 
+https://github.com/dcodeIO/bcrypt.js 
+docs = Node.js(require) + bcryptjs 
+: bcrypt는 {비밀번호를 저장하는 기술}, JWT는 {로그인 상태를 인증}하는 기술 
+- 입력 비밀번호 -> Salt 생성 -> Hash 함수 반복 ->최종 암호화 문자열 생성
+                                ex:bcrypt(password,10)보안 높아지고 cpu낮아진다.
+                                
+- bcrypt는 비밀번호 암호화 라이브러리
+- 단방향 hash 사용 (복호화 불가)
+- salt로 동일 비밀번호도 다르게 저장
+- 로그인 시 compare로 검증
+- JWT 이전 단계에서 반드시 수행
+- require("bcryptjs") -> node_modules/bcryptjs/index.js ->module.exports 반환 -> bcrypt 객체 생성 
+
